@@ -1,0 +1,57 @@
+# ===========================
+# SECRETS — NEVER COMMIT
+# ===========================
+.env
+*.env
+.env.local
+.env.production
+
+# ===========================
+# Python
+# ===========================
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+*.log
+
+# ===========================
+# Node.js
+# ===========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ===========================
+# Data / Storage
+# ===========================
+data/
+uploads/
+logs/
+*.db
+
+# ===========================
+# OS
+# ===========================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ===========================
+# IDE
+# ===========================
+.vscode/
+.idea/
+*.suo
+*.user
+
+# ===========================
+# Docker
+# ===========================
+*.override.yml

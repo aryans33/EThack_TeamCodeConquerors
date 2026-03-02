@@ -1,0 +1,65 @@
+# ============================================================
+# FinAnalysis AI Service — Python Dependencies (Latest versions)
+# AutoGen v0.7 + Gemini + ChromaDB + MongoDB + yfinance
+# ============================================================
+
+# FastAPI + Server
+fastapi
+uvicorn[standard]
+python-multipart
+python-dotenv
+pydantic
+pydantic-settings
+
+# AutoGen v0.7
+autogen-agentchat~=0.7.0
+autogen-ext[openai]~=0.7.0
+
+# OpenAI SDK + tokenizer (required by autogen_ext internally even with Gemini)
+openai
+tiktoken
+
+# Google Gemini
+google-generativeai
+langchain-google-genai
+
+# ChromaDB
+chromadb
+
+# MongoDB
+motor
+pymongo
+
+# Stock Data
+yfinance
+pandas
+numpy
+
+# Mistral OCR
+mistralai
+
+# PDF Processing
+pypdf
+PyMuPDF
+
+# HTTP
+httpx
+aiohttp
+requests
+
+# Utilities
+beautifulsoup4
+python-dateutil
+cachetools
+
+# Reports
+reportlab
+openpyxl
+jinja2
+
+# System
+psutil
+
+# Testing
+pytest
+pytest-asyncio

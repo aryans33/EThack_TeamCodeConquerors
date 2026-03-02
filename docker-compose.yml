@@ -1,0 +1,167 @@
+version: "3.9"
+
+services:
+  # ============================================
+  # MongoDB Database
+  # ============================================
+  mongodb:
+    image: mongo:7.0
+    container_name: finanalysis-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_DATABASE: finanalysis
+    volumes:
+      - mongodb_data:/data/db
+      - ./docker/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - finanalysis-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ============================================
+  # Mongo Express (DB Browser in dev)
+  # ============================================
+  mongo-express:
+    image: mongo-express:latest
+    container_name: finanalysis-mongo-express
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: password123
+      ME_CONFIG_MONGODB_URL: mongodb://admin:password123@mongodb:27017/
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: admin123
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - finanalysis-network
+    profiles:
+      - dev
+
+  # ============================================
+  # Node.js Backend (Express API)
+  # ============================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: finanalysis-backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      NODE_ENV: development
+      PORT: 5000
+      MONGODB_URI: mongodb://admin:password123@mongodb:27017/finanalysis?authSource=admin
+      JWT_SECRET: ${JWT_SECRET:-dev_jwt_secret_change_in_prod}
+      JWT_EXPIRES_IN: 7d
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-dev_refresh_secret_change_in_prod}
+      JWT_REFRESH_EXPIRES_IN: 30d
+      AI_SERVICE_URL: http://ai-service:8000
+      AI_SERVICE_API_KEY: ${INTERNAL_API_KEY:-internal_api_key_between_services}
+      FRONTEND_URL: http://localhost:3000
+      NEWS_API_KEY: ${NEWS_API_KEY:-}
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - ./backend/logs:/app/logs
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - finanalysis-network
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ============================================
+  # Python FastAPI AI Service
+  # ============================================
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: finanalysis-ai
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      ENVIRONMENT: development
+      HOST: 0.0.0.0
+      PORT: 8000
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-internal_api_key_between_services}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      PINECONE_API_KEY: ${PINECONE_API_KEY:-}
+      PINECONE_ENVIRONMENT: ${PINECONE_ENVIRONMENT:-us-east-1}
+      PINECONE_INDEX_NAME: finanalysis-index
+      MONGODB_URI: mongodb://admin:password123@mongodb:27017/finanalysis?authSource=admin
+      NEWS_API_KEY: ${NEWS_API_KEY:-}
+    volumes:
+      - ./ai-service:/app
+      - ai_uploads:/app/uploads
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - finanalysis-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # ============================================
+  # Next.js Frontend
+  # ============================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: finanalysis-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:5000/api
+      NEXT_PUBLIC_AI_URL: http://localhost:8000/api/v1
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - backend
+    networks:
+      - finanalysis-network
+    profiles:
+      - frontend
+
+# ============================================
+# Volumes
+# ============================================
+volumes:
+  mongodb_data:
+    driver: local
+  ai_uploads:
+    driver: local
+
+# ============================================
+# Networks
+# ============================================
+networks:
+  finanalysis-network:
+    driver: bridge
