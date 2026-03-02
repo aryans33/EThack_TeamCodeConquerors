@@ -8,6 +8,7 @@ const logger = require('./utils/logger');
 // Route imports
 const authRoutes = require('./routes/authRoutes');
 const watchlistRoutes = require('./routes/watchlistRoutes');
+const stockRoutes = require('./routes/stockRoutes');
 
 const app = express();
 
@@ -108,6 +109,7 @@ app.get('/api/health', (req, res) => {
 // ============================================
 app.use('/api/auth', authRoutes);
 app.use('/api/watchlist', watchlistRoutes);
+app.use('/api/stocks', stockRoutes);
 
 // ============================================
 // 404 HANDLER

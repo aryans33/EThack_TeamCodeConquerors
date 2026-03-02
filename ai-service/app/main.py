@@ -9,6 +9,7 @@ from app.api import health
 from app.api import stocks
 from app.api import documents
 from app.api import analysis
+from app.api import reasoning
 
 # ============================================
 # Setup Logging
@@ -138,6 +139,7 @@ app.include_router(health.router, tags=["Health"])
 app.include_router(stocks.router)
 app.include_router(documents.router)
 app.include_router(analysis.router)
+app.include_router(reasoning.router)
 
 # ============================================
 # ROOT ROUTE
@@ -157,5 +159,11 @@ async def root():
             "analysis_micro": "/api/v1/analysis/micro/{agent_type}",
             "analysis_macro": "/api/v1/analysis/macro/{symbol}",
             "analysis_full": "/api/v1/analysis/full/{symbol}",
+            "reasoning_thesis": "/api/v1/reasoning/investment-thesis/{symbol}",
+            "reasoning_compare": "/api/v1/reasoning/compare",
+            "reasoning_sector": "/api/v1/reasoning/sector",
+            "reasoning_risk": "/api/v1/reasoning/risk/{symbol}",
+            "reasoning_summary": "/api/v1/reasoning/summary/{symbol}",
+            "reasoning_ask": "/api/v1/reasoning/ask",
         }
     }
